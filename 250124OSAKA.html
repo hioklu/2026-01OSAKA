@@ -10,125 +10,151 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Roboto+Mono:wght@500;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'], mono: ['"Roboto Mono"', 'monospace'], display: ['"Poppins"', 'sans-serif'] },
-                    colors: { dark: '#0f172a', card: '#1e293b', cardLight: '#334155', accent: '#b576df', subAccent: '#fbbf24', textMain: '#f8fafc', textSub: '#94a3b8' }
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        mono: ['"Roboto Mono"', 'monospace'],
+                        display: ['"Poppins"', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: '#0f172a',      // slate-900
+                        card: '#1e293b',      // slate-800
+                        cardLight: '#334155', // slate-700
+                        accent: '#f43f5e',    // rose-500
+                        subAccent: '#fbbf24', // amber-400
+                        textMain: '#f8fafc',
+                        textSub: '#94a3b8',
+                    }
                 }
             }
         }
     </script>
 
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Noto Sans TC', sans-serif; overflow-x: hidden; padding-bottom: 90px; padding-top: 80px; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Noto Sans TC', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 90px;
+            /* Header height adjustments */
+            padding-top: 80px; 
+        }
+
+        /* Hide Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glass-header { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .glass-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 255, 255, 0.05); }
-        .timeline-line { position: absolute; left: 50%; transform: translateX(-50%); top: 45px; bottom: -30px; width: 2px; background-color: #334155; z-index: 0; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Glassmorphism */
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-header {
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Timeline Specifics */
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 45px; /* Icon height + text gap */
+            bottom: -30px; /* Connect to next item */
+            width: 2px;
+            background-color: #334155;
+            z-index: 0;
+        }
         .last-item .timeline-line { display: none; }
-        .trip-card { background: #1e293b; border-radius: 12px; border-left-width: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s; }
+
+        /* Card Styles */
+        .trip-card {
+            background: #1e293b;
+            border-radius: 12px;
+            border-left-width: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
         .trip-card:active { transform: scale(0.98); }
-        .trip-card.important { border-left-color: #b576df; background: linear-gradient(90deg, rgba(244,63,94,0.08) 0%, rgba(30,41,59,1) 100%); }
-        .trip-card.normal { border-left-color: #64748b; }
-        .nav-btn.active { color: #b576df; }
         
-        /* 讀取與錯誤畫面 */
-        #loader { position: fixed; inset: 0; background: #0f172a; z-index: 999; display: flex; flex-col: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
+        .trip-card.important {
+            border-left-color: #f43f5e;
+            background: linear-gradient(90deg, rgba(244,63,94,0.08) 0%, rgba(30,41,59,1) 100%);
+        }
+        .trip-card.normal {
+            border-left-color: #64748b;
+        }
+
+        .nav-btn.active { color: #f43f5e; }
+        .nav-btn.active i { transform: translateY(-2px); }
     </style>
 </head>
 <body>
 
-    <div id="loader" class="flex flex-col gap-4">
-        <i class="fa-solid fa-plane-up fa-bounce text-4xl text-accent"></i>
-        <p id="loader-text" class="text-slate-400 text-sm animate-pulse">連線資料庫中...</p>
-    </div>
-
     <header class="glass-header fixed top-0 w-full z-50 h-[80px] flex justify-between items-center px-5 pt-2">
         <div class="flex flex-col justify-center">
             <h1 class="font-display font-bold text-2xl leading-none tracking-tight text-white mb-1">
-                Osaka <span class="text-accent">2026</span>
-                <span id="save-status" class="text-[10px] text-green-400 ml-2 opacity-0 transition-opacity"><i class="fa-solid fa-cloud-arrow-up"></i> 已同步</span>
+                Osaka Trip <span class="text-accent">2026</span>
             </h1>
-            <p class="text-xs text-slate-400 font-medium tracking-wide">線上協作版</p>
+            <p class="text-xs text-slate-400 font-medium tracking-wide">關西・大阪・環球影城</p>
         </div>
+
         <div class="flex flex-col items-end gap-1.5">
-            <span id="header-day-badge" class="font-display text-[10px] font-bold text-white bg-accent px-2 py-0.5 rounded-full shadow-lg tracking-wider">...</span>
+            <span id="header-day-badge" class="font-display text-[10px] font-bold text-white bg-accent px-2 py-0.5 rounded-full shadow-lg shadow-rose-500/20 tracking-wider">
+                DAY 1
+            </span>
+            <div id="weather-badge" class="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700">
+                <i class="fa-solid fa-spinner fa-spin text-[10px]"></i>
+            </div>
         </div>
     </header>
 
-    <main id="app" class="px-4 pt-4 min-h-screen"></main>
-
-    <button onclick="openEditModal(null)" class="fixed bottom-24 right-5 w-14 h-14 bg-accent rounded-full text-white shadow-lg flex items-center justify-center text-xl z-40 active:scale-90 transition-transform hover:bg-rose-500">
-        <i class="fa-solid fa-plus"></i>
-    </button>
+    <main id="app" class="px-4 pt-4">
+        </main>
 
     <div id="edit-modal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-card w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div class="bg-card w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl">
             <h3 class="text-lg font-bold mb-4 text-white flex items-center gap-2">
-                <i class="fa-solid fa-pen text-accent"></i> <span id="modal-title">編輯行程</span>
+                <i class="fa-solid fa-pen text-accent"></i> 編輯行程
             </h3>
             <input type="hidden" id="edit-id">
+            <input type="hidden" id="edit-date">
             
             <div class="space-y-3">
-                <div id="date-select-group" class="hidden">
-                    <label class="text-xs text-textSub block mb-1">選擇日期</label>
-                    <select id="edit-date-select" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none"></select>
-                </div>
-
                 <div>
                     <label class="text-xs text-textSub block mb-1">標題</label>
-                    <input type="text" id="edit-title" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none" placeholder="例如：環球影城">
+                    <input type="text" id="edit-title" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-xs text-textSub block mb-1">時間 (HH:MM)</label>
-                        <input type="time" id="edit-time" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none">
+                        <label class="text-xs text-textSub block mb-1">開始時間</label>
+                        <input type="text" id="edit-time" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none">
                     </div>
                     <div>
-                        <label class="text-xs text-textSub block mb-1">類型</label>
-                        <select id="edit-type" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none">
-                            <option value="play">玩樂/設施</option>
-                            <option value="food">餐廳/吃</option>
-                            <option value="shop">逛街</option>
-                            <option value="train">交通</option>
-                            <option value="hotel">飯店</option>
-                            <option value="flight">飛機</option>
-                            <option value="camera">景點</option>
-                        </select>
+                        <label class="text-xs text-textSub block mb-1">時長/範圍</label>
+                        <input type="text" id="edit-range" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none">
                     </div>
                 </div>
                 <div>
-                    <label class="text-xs text-textSub block mb-1">備註</label>
-                    <textarea id="edit-desc" rows="3" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none" placeholder="輸入詳細資訊、導航連結或備註..."></textarea>
-                </div>
-                <div class="flex items-center gap-2 pt-2">
-                    <input type="checkbox" id="edit-important" class="w-4 h-4 accent-accent rounded">
-                    <label for="edit-important" class="text-sm text-slate-300">設為重點行程 (星號)</label>
+                    <label class="text-xs text-textSub block mb-1">備註 / 描述</label>
+                    <textarea id="edit-desc" rows="3" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none"></textarea>
                 </div>
             </div>
             
             <div class="flex gap-3 mt-6">
-                <button onclick="deleteEvent()" id="btn-delete" class="px-4 py-3 rounded-xl bg-red-900/30 text-red-400 border border-red-800 hidden"><i class="fa-solid fa-trash"></i></button>
                 <button onclick="closeModal()" class="flex-1 py-3 rounded-xl bg-slate-700 text-textSub">取消</button>
                 <button onclick="saveEdit()" class="flex-1 py-3 rounded-xl bg-accent text-white font-bold shadow-lg shadow-rose-500/20">儲存</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="date-modal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-card w-full max-w-xs rounded-2xl p-6 border border-slate-700">
-            <h3 class="text-white font-bold mb-4">新增旅行日期</h3>
-            <input type="date" id="new-date-input" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white mb-4">
-            <div class="flex gap-2">
-                <button onclick="document.getElementById('date-modal').classList.add('hidden')" class="flex-1 bg-slate-700 text-white py-2 rounded">取消</button>
-                <button onclick="addNewDate()" class="flex-1 bg-accent text-white py-2 rounded">確定</button>
             </div>
         </div>
     </div>
@@ -136,336 +162,406 @@
     <nav class="glass-nav fixed bottom-0 w-full z-40 pb-[env(safe-area-inset-bottom)]">
         <div class="flex justify-around items-center h-16">
             <button onclick="switchTab('plan')" class="nav-btn active w-1/4 flex flex-col items-center gap-1 text-textSub" data-tab="plan">
-                <i class="fa-solid fa-list-ul text-xl"></i><span class="text-[10px] font-bold">行程</span>
+                <i class="fa-solid fa-list-ul text-xl"></i>
+                <span class="text-[10px] font-bold">行程</span>
+            </button>
+            <button onclick="switchTab('guide')" class="nav-btn w-1/4 flex flex-col items-center gap-1 text-textSub" data-tab="guide">
+                <i class="fa-solid fa-book-open text-xl"></i>
+                <span class="text-[10px] font-bold">導覽</span>
             </button>
             <button onclick="switchTab('info')" class="nav-btn w-1/4 flex flex-col items-center gap-1 text-textSub" data-tab="info">
-                <i class="fa-solid fa-circle-info text-xl"></i><span class="text-[10px] font-bold">資訊</span>
+                <i class="fa-solid fa-circle-info text-xl"></i>
+                <span class="text-[10px] font-bold">資訊</span>
             </button>
         </div>
     </nav>
 
     <script>
-        // --- 你的 Firebase 設定 (已自動填入) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCLbbSKx0TsCAWzJCOBjJltkQw7GJ0U9GM", 
-            authDomain: "travel-tool-from-hioklu.firebaseapp.com",
-            projectId: "travel-tool-from-hioklu",
-            storageBucket: "travel-tool-from-hioklu.firebasestorage.app",
-            messagingSenderId: "1038104064998",
-            appId: "1:1038104064998:web:3e70348f56b4675e261c27"
+        // --- Data ---
+        const defaultData = {
+            "2026-01-24": [
+                { id: 1, time: "06:00", range: "06:00 - 07:00", type: "transport", title: "前往桃園機場", desc: "住家 -> TPE 機場。", location: "Taoyuan International Airport" },
+                { id: 2, time: "09:00", range: "09:00 - 12:30", type: "flight", title: "SL396 起飛", desc: "泰獅航 | TPE(T1) -> KIX(T1)", isImportant: true },
+                { id: 3, time: "12:30", range: "12:30 - 13:30", type: "entry", title: "入境 / 領行李", desc: "關西機場第一航廈", location: "Kansai International Airport" },
+                { id: 4, time: "13:30", range: "13:30 - 14:35", type: "train", title: "南海電鐵", desc: "空港急行/Rapi:t -> 難波站", location: "Nankai Kansai Airport Station" },
+                { id: 5, time: "14:35", range: "14:35 - 15:00", type: "hotel", title: "Check-in", desc: "APA Hotel & Resort", location: "APA Hotel & Resort Osaka Namba Eki Tower" },
+                { id: 6, time: "15:30", range: "15:30 - 18:30", type: "shop", title: "難波/心齋橋", desc: "戎橋筋 → 道頓堀 → 心齋橋筋", location: "Dotonbori" },
+                { id: 7, time: "18:30", range: "18:30 - 20:30", type: "food", title: "晚餐時光", desc: "推薦：たこ梅(關東煮)、美津の(大阪燒)、燒肉力丸", isImportant: true, location: "Dotonbori" },
+                { id: 8, time: "20:30", range: "20:30 - 21:30", type: "food", title: "宵夜採買", desc: "神座拉麵、Rikuro蛋糕、章魚燒" },
+                { id: 9, time: "21:30", range: "", type: "hotel", title: "回飯店休息", desc: "儲備體力", location: "APA Hotel & Resort Osaka Namba Eki Tower" }
+            ],
+            "2026-01-25": [
+                { id: 10, time: "08:00", range: "08:00 - 08:30", type: "train", title: "出發前往 USJ", desc: "JR難波 -> 西九條 -> 環球影城", location: "Universal Studios Japan" },
+                { id: 11, time: "08:40", range: "08:40 - 09:00", type: "ticket", title: "入園 & 抽整理券", desc: "掃描QR Code，App抽夜間任天堂", isImportant: true, link: "https://www.klook.com/klvoucher/OHAzQVFEbXdWS3IxWlZtaXhHaEZFNE13SGRwa0t6d01IanBTd2s1bW1sSmo1Y0I1Q0k4VXdvM2xmeHB0eFQwcW5nUVlWeW9XMFd2dTJBZEU5dTJtZm1hOVJhN2c2OUVybkNOaU1Jc3VXalU9.pdf?from_source=email&from_medium=system_email&from_campaign=TTD_pretrip2_booking_confirmation_base", linkText: "入園門票 PDF" },
+                { id: 12, time: "09:00", range: "09:00 - 10:45", type: "play", title: "自由活動", desc: "排隊短的設施 / 飛天翼龍" },
+                { id: 13, time: "11:00", range: "11:00 - 11:15", type: "star", title: "【快通】進任天堂世界", desc: "必須準時入場！", isImportant: true },
+                { id: 14, time: "11:00", range: "11:00 - 11:30", type: "play", title: "馬力歐賽車", desc: "庫巴的挑戰書" },
+                { id: 15, time: "11:30", range: "11:30 - 12:00", type: "play", title: "咚奇剛瘋狂礦車", desc: "務必準時" },
+                { id: 16, time: "12:00", range: "12:00 - 12:45", type: "food", title: "午餐", desc: "奇諾比奧咖啡 (需領券) 或餐車", location: "Kinopio's Cafe" },
+                { id: 17, time: "13:00", range: "13:00 - 13:30", type: "play", title: "【快通】小小兵", desc: "小小兵瘋狂任務", location: "Minion Park" },
+                { id: 18, time: "15:00", range: "15:00 - 15:20", type: "star", title: "【快通】進哈利波特", desc: "前往魔法世界", isImportant: true },
+                { id: 19, time: "15:20", range: "15:20 - 15:50", type: "play", title: "禁忌之旅", desc: "哈利波特禁忌之旅" },
+                { id: 20, time: "15:50", range: "15:50 - 17:00", type: "shop", title: "活米村", desc: "奶油啤酒、魔杖、拍照" },
+                { id: 21, time: "19:00", range: "19:00 - 20:00", type: "train", title: "離園", desc: "返回難波", location: "Universal City Station" }
+            ],
+            "2026-01-26": [
+                { id: 30, time: "09:00", range: "09:00 - 09:40", type: "train", title: "前往大阪城", desc: "地鐵/JR", location: "Osaka Castle Park" },
+                { id: 31, time: "09:40", range: "09:40 - 12:00", type: "camera", title: "柯南聖地巡禮", desc: "讀賣電視台(銅像) -> 天守閣 -> 極樂橋" },
+                { id: 32, time: "12:30", range: "12:30 - 14:00", type: "food", title: "午餐：串炸", desc: "通天閣新世界 (達摩/八重勝)", location: "Tsutenkaku" },
+                { id: 33, time: "14:30", range: "14:30 - 18:00", type: "shop", title: "梅田商圈", desc: "LUCUA / Grand Front / HEP FIVE 摩天輪" },
+                { id: 34, time: "20:00", range: "20:00 - 22:00", type: "hotel", title: "打包行李", desc: "最後整理，隔日早班機", isImportant: true }
+            ],
+            "2026-01-27": [
+                { id: 40, time: "06:30", range: "06:30 - 07:00", type: "hotel", title: "Check-out", desc: "退房" },
+                { id: 41, time: "07:00", range: "07:00 - 07:50", type: "train", title: "前往機場", desc: "南海電鐵 (07:00 班次)", location: "Nankai Namba Station" },
+                { id: 42, time: "07:50", range: "07:50 - 08:10", type: "bus", title: "T1 轉 T2", desc: "Aeroplaza 搭乘接駁車", link: "https://www.j-culturearc.com/kansai-airport-t2-guide/", linkText: "接駁攻略" },
+                { id: 43, time: "10:10", range: "10:10 - 12:45", type: "flight", title: "MM025 返台", desc: "樂桃 | KIX(T2) -> TPE(T1)", isImportant: true },
+                { id: 44, time: "12:45", range: "", type: "home", title: "抵達台北", desc: "旅途結束" }
+            ]
         };
 
-        // 初始化 Firebase
-        try {
-            firebase.initializeApp(firebaseConfig);
-            var db = firebase.firestore();
-            console.log("Firebase Connected");
-        } catch(e) {
-            console.error("Firebase Init Error:", e);
-            document.getElementById('loader-text').innerText = "連線失敗，請檢查網路";
-            document.getElementById('loader-text').classList.add('text-red-500');
+        // --- State ---
+        let tripData = JSON.parse(localStorage.getItem('tripData_2026_v4')) || defaultData;
+        let activeTab = 'plan';
+        let activeDate = '2026-01-24';
+        
+        // Manual Map for Weekdays to ensure accuracy for 2026
+        const weekdayMap = {
+            "2026-01-24": "週六",
+            "2026-01-25": "週日",
+            "2026-01-26": "週一",
+            "2026-01-27": "週二"
+        };
+        
+        const dayNumberMap = {
+            "2026-01-24": "DAY 1",
+            "2026-01-25": "DAY 2",
+            "2026-01-26": "DAY 3",
+            "2026-01-27": "DAY 4"
+        };
+
+        // --- Core Functions ---
+        
+        function init() {
+            renderHeaderInfo();
+            switchTab('plan');
         }
 
-        // --- 全域變數 ---
-        let globalData = {}; 
-        let activeDate = ""; 
-        const docId = "my_trip_data_v1"; // 這就像是你的檔案名稱
+        function renderHeaderInfo() {
+            // Update Day Badge
+            const dayBadge = document.getElementById('header-day-badge');
+            dayBadge.innerText = dayNumberMap[activeDate] || "DAY ?";
 
-        // --- 核心邏輯 ---
-        function initApp() {
-            const docRef = db.collection("trips").doc(docId);
-            const loader = document.getElementById('loader');
-            const loaderText = document.getElementById('loader-text');
-
-            // 監聽資料庫變化
-            docRef.onSnapshot((doc) => {
-                if (doc.exists) {
-                    console.log("資料同步成功！");
-                    globalData = doc.data();
-                    
-                    // 如果沒有選中日期，預設選第一天
-                    if (!activeDate) {
-                        const dates = Object.keys(globalData).sort();
-                        if(dates.length > 0) activeDate = dates[0];
-                    }
-                    
-                    renderPlan();
-                    loader.style.opacity = 0;
-                    setTimeout(() => loader.style.display = 'none', 500);
-
-                } else {
-                    // *** 關鍵：如果資料庫是空的，寫入範例資料 ***
-                    console.log("資料庫是空的，建立預設資料中...");
-                    loaderText.innerText = "正在建立初始資料庫...";
-                    
-                    const defaultData = {
-                        "2026-01-24": [
-                            { id: 1, time: "09:00", type: "flight", title: "抵達關西機場", desc: "TPE -> KIX", isImportant: true },
-                            { id: 2, time: "12:00", type: "train", title: "前往難波", desc: "南海電鐵 Rapi:t" },
-                            { id: 3, time: "18:00", type: "food", title: "道頓堀晚餐", desc: "吃大阪燒、章魚燒", isImportant: true }
-                        ]
-                    };
-                    
-                    // 寫入
-                    db.collection("trips").doc(docId).set(defaultData)
-                        .then(() => {
-                            console.log("預設資料建立完成！");
-                            // 寫入後會自動觸發上面的 onSnapshot，所以不用手動 reload
-                        })
-                        .catch((error) => {
-                            console.error("建立資料失敗: ", error);
-                            loaderText.innerHTML = `建立失敗<br>請檢查 Firebase Console 安全規則 (Rules)<br>是否設為 true`;
-                            loaderText.classList.add('text-red-500');
-                        });
-                }
-            }, (error) => {
-                console.error("監聽失敗:", error);
-                // 通常是權限不足 (Rules = false)
-                loaderText.innerHTML = `存取被拒絕<br>請至 Firebase Console -> Firestore -> Rules<br>將 allow read, write 改為 true`;
-                loaderText.classList.add('text-red-500');
-            });
-        }
-
-        function saveToCloud() {
-            const status = document.getElementById('save-status');
-            db.collection("trips").doc(docId).set(globalData)
-                .then(() => {
-                    status.style.opacity = 1;
-                    setTimeout(() => status.style.opacity = 0, 2000);
-                })
-                .catch((error) => alert("儲存失敗: " + error.message));
-        }
-
-        // --- 畫面渲染 ---
-        function renderPlan() {
-            const container = document.getElementById('app');
-            container.innerHTML = '';
-
-            const dates = Object.keys(globalData).sort();
-            const weekdayMap = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-
-            // Header Badge
-            const dayIndex = dates.indexOf(activeDate);
-            document.getElementById('header-day-badge').innerText = dayIndex >= 0 ? `DAY ${dayIndex + 1}` : "PLAN";
-
-            // Date Scroll
-            let html = `<div class="sticky top-[80px] z-30 bg-dark/95 backdrop-blur pb-3 pt-2 -mx-4 px-4 flex gap-2 overflow-x-auto no-scrollbar border-b border-white/5 mb-6">`;
+            // Update Weather/Date
+            const weather = document.getElementById('weather-badge');
+            const now = new Date(); // Simulating "Today" for display purposes
+            // In a real app, this would be the actual date or the selected trip date weather
+            const selectedDate = new Date(activeDate);
+            const displayDate = `${selectedDate.getMonth()+1}/${selectedDate.getDate()}`;
             
-            dates.forEach(date => {
-                const d = new Date(date);
-                const isActive = date === activeDate;
-                const weekDay = weekdayMap[d.getDay()];
-                const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
-                
-                html += `
-                    <button onclick="switchDate('${date}')" class="flex-shrink-0 px-4 py-2 rounded-full border transition-all text-sm font-bold tracking-wide ${isActive ? 'bg-white text-dark border-white shadow-lg' : 'bg-transparent border-slate-600 text-slate-400'}">
-                        ${dateStr} ${weekDay}
-                    </button>`;
-            });
-
-            // Add Date Button
-            html += `
-                <button onclick="document.getElementById('date-modal').classList.remove('hidden')" class="flex-shrink-0 px-3 py-2 rounded-full border border-dashed border-slate-600 text-slate-500 hover:text-accent">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-            </div>`;
-
-            // Events List
-            const events = globalData[activeDate] || [];
-            events.sort((a, b) => (a.time || "00:00").localeCompare(b.time || "00:00"));
-
-            html += `<div class="pb-24">`;
-            if (events.length === 0) {
-                html += `<div class="text-center text-slate-500 mt-10 flex flex-col items-center gap-2">
-                    <i class="fa-regular fa-calendar-xmark text-3xl opacity-50"></i>
-                    <p>點擊右下角 + 新增行程</p>
-                </div>`;
-            }
-
-            events.forEach((item, index) => {
-                const isLast = index === events.length - 1;
-                const icon = getIcon(item.type);
-                
-                html += `
-                    <div class="flex gap-4 mb-2 group ${isLast ? 'last-item' : ''}" onclick="openEditModal('${item.id}')">
-                        <div class="flex flex-col items-center w-14 flex-shrink-0 relative">
-                            <div class="text-xs font-mono font-bold text-textSub mb-2">${item.time}</div>
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg ${item.isImportant ? 'bg-accent text-white' : 'bg-cardLight text-textSub border border-slate-600'}">
-                                <i class="${icon} text-sm"></i>
-                            </div>
-                            <div class="timeline-line"></div>
-                        </div>
-
-                        <div class="flex-1 min-w-0 pb-6 cursor-pointer">
-                            <div class="trip-card ${item.isImportant ? 'important' : 'normal'} p-4 h-full flex flex-col justify-between hover:bg-slate-800 transition-colors">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="font-bold text-lg leading-tight text-white pr-2">${item.title}</h3>
-                                    ${item.isImportant ? '<i class="fa-solid fa-star text-accent text-xs"></i>' : ''}
-                                </div>
-                                <p class="text-sm text-slate-300 whitespace-pre-line leading-relaxed">${item.desc || ''}</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-
-            container.innerHTML = html;
-        }
-
-        // --- 互動功能 ---
-        function switchDate(date) {
-            activeDate = date;
-            renderPlan();
+            weather.innerHTML = `
+                <a href="https://www.jma.go.jp/bosai/forecast/" target="_blank" class="flex items-center gap-1.5">
+                    <span class="font-mono font-bold text-slate-400">${displayDate}</span>
+                    <i class="fa-solid fa-cloud-sun text-subAccent"></i>
+                    <span>6°C</span>
+                </a>
+            `;
         }
 
         function switchTab(tab) {
-             // 簡易切換示範，目前主要功能在 plan
-             document.querySelectorAll('.nav-btn').forEach(btn => {
-                const isActive = btn.dataset.tab === tab;
-                btn.classList.toggle('active', isActive);
-                btn.classList.toggle('text-accent', isActive);
-                btn.classList.toggle('text-textSub', !isActive);
+            activeTab = tab;
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+                btn.classList.toggle('text-accent', btn.dataset.tab === tab);
+                btn.classList.toggle('text-textSub', btn.dataset.tab !== tab);
             });
-            
-            if(tab === 'info') {
-                document.getElementById('app').innerHTML = `
-                <div class="p-6 text-center text-slate-400 bg-card rounded-xl border border-slate-700 mt-4">
-                    <h2 class="text-xl text-white font-bold mb-2">專案資訊</h2>
-                    <p class="text-xs break-all">DocID: ${docId}</p>
-                    <p class="text-xs mt-2 text-green-400">Firebase 連線正常</p>
-                </div>`;
-            } else {
-                renderPlan();
-            }
+
+            const container = document.getElementById('app');
+            container.innerHTML = '';
+            window.scrollTo(0, 0);
+
+            if (tab === 'plan') renderPlan(container);
+            else if (tab === 'guide') renderGuide(container);
+            else if (tab === 'info') renderInfo(container);
         }
 
-        function addNewDate() {
-            const newDate = document.getElementById('new-date-input').value;
-            if(!newDate) return;
+        // --- PLAN View (Timeline) ---
+        function renderPlan(container) {
+            // 1. Date Selector (Pills showing Date + Weekday)
+            let html = `<div class="sticky top-[80px] z-30 bg-dark/95 backdrop-blur pb-3 pt-2 -mx-4 px-4 flex gap-2 overflow-x-auto no-scrollbar border-b border-white/5 mb-6">`;
+            Object.keys(tripData).forEach(date => {
+                const isActive = date === activeDate;
+                const d = new Date(date);
+                const displayDate = `${d.getMonth()+1}/${d.getDate()}`;
+                const weekDay = weekdayMap[date];
+
+                html += `
+                    <button onclick="changeDate('${date}')" class="flex-shrink-0 px-4 py-2 rounded-full border transition-all text-sm font-bold tracking-wide ${isActive ? 'bg-white text-dark border-white shadow-lg' : 'bg-transparent border-slate-600 text-slate-400 hover:border-slate-400'}">
+                        ${displayDate} ${weekDay}
+                    </button>`;
+            });
+            html += `</div>`;
+
+            // 2. Timeline Loop
+            const events = tripData[activeDate] || [];
+            html += `<div class="pb-24">`;
             
-            if(!globalData[newDate]) {
-                globalData[newDate] = [];
-                activeDate = newDate;
-                saveToCloud();
+            if(events.length === 0) {
+                html += `<div class="text-center text-slate-500 mt-10">本日無行程</div>`;
             } else {
-                alert("該日期已存在");
-                activeDate = newDate;
-            }
-            document.getElementById('date-modal').classList.add('hidden');
-        }
+                events.forEach((item, index) => {
+                    const isLast = index === events.length - 1;
+                    const isImportant = item.isImportant;
+                    const icon = getIcon(item.type);
+                    
+                    // Design: Left Column (Time above Icon) + Right Column (Card)
+                    html += `
+                        <div class="flex gap-4 mb-2 group ${isLast ? 'last-item' : ''}">
+                            <div class="flex flex-col items-center w-14 flex-shrink-0 relative">
+                                <div class="text-xs font-mono font-bold text-textSub mb-2">${item.time}</div>
+                                
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg ${isImportant ? 'bg-accent text-white' : 'bg-cardLight text-textSub border border-slate-600'}">
+                                    <i class="${icon} text-sm"></i>
+                                </div>
+                                
+                                <div class="timeline-line"></div>
+                            </div>
 
-        function openEditModal(id) {
-            const modal = document.getElementById('edit-modal');
-            const titleEl = document.getElementById('modal-title');
-            const dateSelectGroup = document.getElementById('date-select-group');
-            const dateSelect = document.getElementById('edit-date-select');
-            const btnDelete = document.getElementById('btn-delete');
+                            <div class="flex-1 min-w-0 pb-6" onclick="openEditModal('${activeDate}', ${item.id})">
+                                <div class="trip-card ${isImportant ? 'important' : 'normal'} p-4 h-full flex flex-col justify-between">
+                                    
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="font-bold text-lg leading-tight text-white pr-2">${item.title}</h3>
+                                        ${isImportant ? '<i class="fa-solid fa-star text-accent text-xs"></i>' : ''}
+                                    </div>
 
-            // Reset Form
-            document.getElementById('edit-id').value = "";
-            document.getElementById('edit-title').value = "";
-            document.getElementById('edit-time').value = "10:00";
-            document.getElementById('edit-type').value = "food";
-            document.getElementById('edit-desc').value = "";
-            document.getElementById('edit-important').checked = false;
+                                    <div class="text-xs text-textSub mb-3 flex items-center gap-1">
+                                        <i class="fa-regular fa-clock"></i> <span>${item.range || item.time}</span>
+                                    </div>
+                                    <p class="text-sm text-slate-300 whitespace-pre-line leading-relaxed mb-4">${item.desc}</p>
 
-            if (id) {
-                // Edit
-                const list = globalData[activeDate];
-                const item = list.find(i => i.id == id);
-                if(!item) return;
-
-                document.getElementById('edit-id').value = item.id;
-                document.getElementById('edit-title').value = item.title;
-                document.getElementById('edit-time').value = item.time;
-                document.getElementById('edit-type').value = item.type;
-                document.getElementById('edit-desc').value = item.desc;
-                document.getElementById('edit-important').checked = item.isImportant;
-                
-                titleEl.innerText = "編輯行程";
-                dateSelectGroup.classList.add('hidden');
-                btnDelete.classList.remove('hidden');
-            } else {
-                // Add
-                titleEl.innerText = "新增行程";
-                dateSelect.innerHTML = "";
-                // 填充日期選項
-                const dates = Object.keys(globalData).sort();
-                if(dates.length === 0) return alert("請先新增日期");
-
-                dates.forEach(d => {
-                    const opt = document.createElement('option');
-                    opt.value = d;
-                    opt.text = d;
-                    if(d === activeDate) opt.selected = true;
-                    dateSelect.appendChild(opt);
+                                    <div class="mt-auto pt-2">
+                                        ${getCardButton(item)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
-                
-                dateSelectGroup.classList.remove('hidden');
-                btnDelete.classList.add('hidden');
             }
-
-            modal.classList.remove('hidden');
+            html += `</div>`;
+            container.innerHTML = html;
         }
 
-        function saveEdit() {
-            const id = document.getElementById('edit-id').value;
-            const title = document.getElementById('edit-title').value;
-            
-            if(!title) return alert("請輸入標題");
-
-            const newData = {
-                id: id ? id : Date.now().toString(),
-                title: title,
-                time: document.getElementById('edit-time').value,
-                type: document.getElementById('edit-type').value,
-                desc: document.getElementById('edit-desc').value,
-                isImportant: document.getElementById('edit-important').checked
-            };
-
-            if (id) {
-                // Update existing
-                const list = globalData[activeDate];
-                const idx = list.findIndex(i => i.id == id);
-                if(idx > -1) list[idx] = newData;
+        function getCardButton(item) {
+            // Priority: Ticket Link > Map > None
+            if (item.link) {
+                return `
+                    <a href="${item.link}" target="_blank" onclick="event.stopPropagation()" class="block w-full bg-slate-700/50 hover:bg-slate-700 border border-slate-600 rounded-lg py-2 text-center text-xs font-bold text-white transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-ticket text-accent"></i> ${item.linkText || '票券/連結'}
+                    </a>`;
+            } else if (item.location) {
+                return `
+                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}" target="_blank" onclick="event.stopPropagation()" class="block w-full bg-slate-700/50 hover:bg-slate-700 border border-slate-600 rounded-lg py-2 text-center text-xs font-bold text-white transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-location-arrow text-slate-300"></i> 導航
+                    </a>`;
             } else {
-                // Create new
-                const targetDate = document.getElementById('edit-date-select').value;
-                if(!globalData[targetDate]) globalData[targetDate] = [];
-                globalData[targetDate].push(newData);
-                activeDate = targetDate;
+                return `<div class="h-2"></div>`; // Spacer if no button
             }
-
-            saveToCloud();
-            closeModal();
         }
 
-        function deleteEvent() {
-            const id = document.getElementById('edit-id').value;
-            if(confirm("確定刪除此行程？")) {
-                const list = globalData[activeDate];
-                globalData[activeDate] = list.filter(i => i.id != id);
-                saveToCloud();
-                closeModal();
-            }
+        // --- GUIDE View ---
+        function renderGuide(container) {
+            container.innerHTML = `
+                <div class="space-y-6 pb-24 animate-[fadeIn_0.3s_ease-out]">
+                    <section class="bg-card rounded-xl border border-slate-700 overflow-hidden">
+                        <div class="bg-slate-800 p-3 border-b border-slate-700 flex justify-between items-center">
+                            <h2 class="font-bold text-white"><i class="fa-solid fa-plane-up mr-2 text-accent"></i>航班資訊</h2>
+                            <span class="text-xs bg-slate-700 px-2 py-1 rounded">TPE <-> KIX</span>
+                        </div>
+                        <div class="p-4 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="text-center">
+                                    <div class="text-2xl font-mono font-bold">09:00</div>
+                                    <div class="text-xs text-slate-400">TPE (T1)</div>
+                                </div>
+                                <div class="flex-1 mx-4 border-t border-slate-600 relative top-[-5px]"></div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-mono font-bold">12:30</div>
+                                    <div class="text-xs text-slate-400">KIX (T1)</div>
+                                </div>
+                            </div>
+                            <div class="text-xs text-center text-slate-500">泰獅航 SL396</div>
+                            
+                            <hr class="border-slate-700">
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="text-center">
+                                    <div class="text-2xl font-mono font-bold">10:10</div>
+                                    <div class="text-xs text-accent font-bold">KIX (T2)</div>
+                                </div>
+                                <div class="flex-1 mx-4 border-t border-slate-600 relative top-[-5px]"></div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-mono font-bold">12:45</div>
+                                    <div class="text-xs text-slate-400">TPE (T1)</div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-slate-500">樂桃 MM025</span>
+                                <span class="bg-accent/10 text-accent px-2 py-0.5 rounded font-mono">W9UZTZ</span>
+                            </div>
+                            <a href="https://manage.flypeach.com/zh-tw/manage/login" target="_blank" class="block w-full bg-accent text-white text-center py-2 rounded font-bold text-sm">樂桃報到</a>
+                        </div>
+                    </section>
+
+                    <section class="bg-card rounded-xl border border-slate-700 p-4">
+                        <h2 class="font-bold text-white mb-3"><i class="fa-solid fa-wand-magic-sparkles mr-2 text-subAccent"></i>USJ 攻略</h2>
+                        <div class="aspect-video bg-slate-800 rounded mb-3 overflow-hidden">
+                             <iframe width="100%" height="100%" frameborder="0" scrolling="no" src="https://www.openstreetmap.org/export/embed.html?bbox=135.430,34.663,135.435,34.667&layer=mapnik&marker=34.665,135.432" style="filter: grayscale(1) invert(1) contrast(1.2);"></iframe>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <a href="https://www.klook.com/klvoucher/OHAzQVFEbXdWS3IxWlZtaXhHaEZFNE13SGRwa0t6d01IanBTd2s1bW1sSmo1Y0I1Q0k4VXdvM2xmeHB0eFQwcW5nUVlWeW9XMFd2dTJBZEU5dTJtZm1hOVJhN2c2OUVybkNOaU1Jc3VXalU9.pdf" target="_blank" class="bg-white text-dark py-2 rounded text-center text-xs font-bold flex flex-col items-center gap-1">
+                                <i class="fa-solid fa-qrcode text-lg"></i> 入園門票
+                            </a>
+                             <a href="https://www.klook.com/klvoucher/SFFTQXFWeVdLTTJIVFVlK0tuRjYzVUFLb0xCWGFsVThrNTRGbWRxd2FNek83SWJQNHNvQjZuTzRNVUF1WG8xZVJXU3V5MGJEZ0FWd1RHc3d3bmNyQTZmSGk5QmhwQjNJUk1WNGhTQlZuOEk9.pdf" target="_blank" class="bg-subAccent text-dark py-2 rounded text-center text-xs font-bold flex flex-col items-center gap-1">
+                                <i class="fa-solid fa-bolt text-lg"></i> 快速通關
+                            </a>
+                        </div>
+                        <ul class="text-sm text-slate-300 list-disc list-inside space-y-1">
+                            <li>入園立刻抽「任天堂夜間整理券」。</li>
+                            <li>11:00 準時進任天堂 (快通)。</li>
+                            <li>15:00 準時進哈利波特 (快通)。</li>
+                        </ul>
+                    </section>
+
+                    <section class="bg-card rounded-xl border border-slate-700 p-4">
+                        <h2 class="font-bold text-white mb-3"><i class="fa-solid fa-magnifying-glass mr-2 text-blue-400"></i>柯南巡禮</h2>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 items-start">
+                                <span class="bg-blue-900 text-blue-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                                <div>
+                                    <div class="font-bold text-sm">讀賣電視台</div>
+                                    <div class="text-xs text-slate-400">門口少年偵探團銅像</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 items-start">
+                                <span class="bg-blue-900 text-blue-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                                <div>
+                                    <div class="font-bold text-sm">大阪城天守閣</div>
+                                    <div class="text-xs text-slate-400">平次與和葉經典場景</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            `;
+        }
+
+        // --- INFO View ---
+        function renderInfo(container) {
+            container.innerHTML = `
+                <div class="space-y-4 pb-24">
+                     <div class="bg-card rounded-xl p-6 text-center border border-slate-700">
+                        <h2 class="text-xl font-bold text-white mb-1">APA Hotel & Resort</h2>
+                        <p class="text-sm text-slate-400 mb-4">Osaka Namba Eki-mae Tower</p>
+                        <div class="text-xs text-slate-500 mb-4">大阪府大阪市浪速区湊町1-2-1</div>
+                        <a href="https://www.google.com/maps/search/?api=1&query=APA+Hotel+Resort+Osaka+Namba+Eki+Tower" target="_blank" class="inline-block bg-slate-700 text-white px-6 py-2 rounded-full text-sm font-bold">導航至飯店</a>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                         <a href="https://www.jma.go.jp/bosai/forecast/" target="_blank" class="bg-card p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center gap-2">
+                            <i class="fa-solid fa-cloud-sun-rain text-2xl text-blue-400"></i>
+                            <span class="text-sm font-bold">天氣預報</span>
+                        </a>
+                        <a href="https://www.google.com/maps" target="_blank" class="bg-card p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-2xl text-green-400"></i>
+                            <span class="text-sm font-bold">Google Maps</span>
+                        </a>
+                    </div>
+
+                    <div class="mt-8 text-center">
+                        <button onclick="resetData()" class="text-xs text-red-500 underline opacity-60">重置所有資料</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Utils & Edit Logic ---
+
+        function changeDate(date) {
+            activeDate = date;
+            renderHeaderInfo(); // Update header Day/Date
+            renderPlan(document.getElementById('app'));
+        }
+
+        function getIcon(type) {
+            const icons = {
+                transport: 'fa-solid fa-suitcase-rolling',
+                flight: 'fa-solid fa-plane-up',
+                train: 'fa-solid fa-train-subway',
+                bus: 'fa-solid fa-bus',
+                hotel: 'fa-solid fa-bed',
+                food: 'fa-solid fa-utensils',
+                shop: 'fa-solid fa-bag-shopping',
+                play: 'fa-solid fa-gamepad',
+                ticket: 'fa-solid fa-ticket',
+                star: 'fa-solid fa-star',
+                camera: 'fa-solid fa-camera',
+                entry: 'fa-solid fa-passport',
+                home: 'fa-solid fa-house',
+            };
+            return icons[type] || 'fa-solid fa-circle';
+        }
+
+        function openEditModal(date, id) {
+            const item = tripData[date].find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-date').value = date;
+            document.getElementById('edit-title').value = item.title;
+            document.getElementById('edit-time').value = item.time;
+            document.getElementById('edit-range').value = item.range || "";
+            document.getElementById('edit-desc').value = item.desc || "";
+            
+            document.getElementById('edit-modal').classList.remove('hidden');
         }
 
         function closeModal() {
             document.getElementById('edit-modal').classList.add('hidden');
         }
 
-        function getIcon(type) {
-            const map = {
-                food: 'fa-solid fa-utensils', shop: 'fa-solid fa-bag-shopping',
-                play: 'fa-solid fa-gamepad', train: 'fa-solid fa-train-subway',
-                hotel: 'fa-solid fa-bed', flight: 'fa-solid fa-plane-up',
-                camera: 'fa-solid fa-camera'
-            };
-            return map[type] || 'fa-solid fa-circle';
+        function saveEdit() {
+            const id = parseInt(document.getElementById('edit-id').value);
+            const date = document.getElementById('edit-date').value;
+            const newTitle = document.getElementById('edit-title').value;
+            const newTime = document.getElementById('edit-time').value;
+            const newRange = document.getElementById('edit-range').value;
+            const newDesc = document.getElementById('edit-desc').value;
+
+            const list = tripData[date];
+            const idx = list.findIndex(i => i.id === id);
+            if (idx > -1) {
+                list[idx].title = newTitle;
+                list[idx].time = newTime;
+                list[idx].range = newRange;
+                list[idx].desc = newDesc;
+                
+                localStorage.setItem('tripData_2026_v4', JSON.stringify(tripData));
+                closeModal();
+                if(activeTab === 'plan') renderPlan(document.getElementById('app'));
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', initApp);
+        function resetData() {
+            if(confirm('確定重置？所有編輯將消失。')) {
+                localStorage.removeItem('tripData_2026_v4');
+                location.reload();
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
