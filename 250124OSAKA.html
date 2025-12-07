@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Osaka Trip 2026 (Online)</title>
+    <title>Osaka Trip 2026</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,23 +12,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['"Noto Sans TC"', 'sans-serif'],
-                        mono: ['"Roboto Mono"', 'monospace'],
-                        display: ['"Poppins"', 'sans-serif'],
-                    },
-                    colors: {
-                        dark: '#0f172a', card: '#1e293b', cardLight: '#334155',
-                        accent: '#b576df', subAccent: '#fbbf24',
-                        textMain: '#f8fafc', textSub: '#94a3b8',
-                    }
+                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'], mono: ['"Roboto Mono"', 'monospace'], display: ['"Poppins"', 'sans-serif'] },
+                    colors: { dark: '#0f172a', card: '#1e293b', cardLight: '#334155', accent: '#b576df', subAccent: '#fbbf24', textMain: '#f8fafc', textSub: '#94a3b8' }
                 }
             }
         }
@@ -37,92 +29,93 @@
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Noto Sans TC', sans-serif; overflow-x: hidden; padding-bottom: 90px; padding-top: 80px; -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glass-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 255, 255, 0.05); }
         .glass-header { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 255, 255, 0.05); }
         .timeline-line { position: absolute; left: 50%; transform: translateX(-50%); top: 45px; bottom: -30px; width: 2px; background-color: #334155; z-index: 0; }
         .last-item .timeline-line { display: none; }
-        .trip-card { background: #1e293b; border-radius: 12px; border-left-width: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s; position: relative;}
+        .trip-card { background: #1e293b; border-radius: 12px; border-left-width: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s; }
         .trip-card:active { transform: scale(0.98); }
         .trip-card.important { border-left-color: #b576df; background: linear-gradient(90deg, rgba(244,63,94,0.08) 0%, rgba(30,41,59,1) 100%); }
         .trip-card.normal { border-left-color: #64748b; }
         .nav-btn.active { color: #b576df; }
-        .nav-btn.active i { transform: translateY(-2px); }
         
-        /* Loading Overlay */
-        #loader { position: fixed; inset: 0; background: #0f172a; z-index: 100; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
-        .fab { position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px; border-radius: 50%; bg-accent; box-shadow: 0 4px 12px rgba(181, 118, 223, 0.4); display: flex; justify-content: center; align-items: center; z-index: 45; font-size: 24px; color: white; transition: transform 0.2s; }
-        .fab:active { transform: scale(0.9); }
+        /* 讀取與錯誤畫面 */
+        #loader { position: fixed; inset: 0; background: #0f172a; z-index: 999; display: flex; flex-col: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
     </style>
 </head>
 <body>
 
-    <div id="loader"><i class="fa-solid fa-spinner fa-spin text-4xl text-accent"></i></div>
+    <div id="loader" class="flex flex-col gap-4">
+        <i class="fa-solid fa-plane-up fa-bounce text-4xl text-accent"></i>
+        <p id="loader-text" class="text-slate-400 text-sm animate-pulse">連線資料庫中...</p>
+    </div>
 
     <header class="glass-header fixed top-0 w-full z-50 h-[80px] flex justify-between items-center px-5 pt-2">
         <div class="flex flex-col justify-center">
             <h1 class="font-display font-bold text-2xl leading-none tracking-tight text-white mb-1">
                 Osaka <span class="text-accent">2026</span>
-                <span id="sync-status" class="text-[10px] text-green-400 ml-1 opacity-0 transition-opacity"><i class="fa-solid fa-cloud"></i></span>
+                <span id="save-status" class="text-[10px] text-green-400 ml-2 opacity-0 transition-opacity"><i class="fa-solid fa-cloud-arrow-up"></i> 已同步</span>
             </h1>
-            <p class="text-xs text-slate-400 font-medium tracking-wide">大阪・環球影城</p>
+            <p class="text-xs text-slate-400 font-medium tracking-wide">線上協作版</p>
         </div>
         <div class="flex flex-col items-end gap-1.5">
-            <span id="header-day-badge" class="font-display text-[10px] font-bold text-white bg-accent px-2 py-0.5 rounded-full shadow-lg shadow-rose-500/20 tracking-wider">DAY 1</span>
-            <div class="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700">
-                <i class="fa-solid fa-cloud-sun text-subAccent"></i> <span>預報</span>
-            </div>
+            <span id="header-day-badge" class="font-display text-[10px] font-bold text-white bg-accent px-2 py-0.5 rounded-full shadow-lg tracking-wider">...</span>
         </div>
     </header>
 
     <main id="app" class="px-4 pt-4 min-h-screen"></main>
 
-    <button id="fab-add" onclick="openEditModal(activeDate, null)" class="fab bg-accent hidden">
+    <button onclick="openEditModal(null)" class="fixed bottom-24 right-5 w-14 h-14 bg-accent rounded-full text-white shadow-lg flex items-center justify-center text-xl z-40 active:scale-90 transition-transform hover:bg-rose-500">
         <i class="fa-solid fa-plus"></i>
     </button>
 
     <div id="edit-modal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-card w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl overflow-y-auto max-h-[90vh]">
             <h3 class="text-lg font-bold mb-4 text-white flex items-center gap-2">
-                <i class="fa-solid fa-pen-to-square text-accent"></i> <span id="modal-title">編輯行程</span>
+                <i class="fa-solid fa-pen text-accent"></i> <span id="modal-title">編輯行程</span>
             </h3>
             <input type="hidden" id="edit-id">
-            <input type="hidden" id="edit-date-input">
             
             <div class="space-y-3">
+                <div id="date-select-group" class="hidden">
+                    <label class="text-xs text-textSub block mb-1">選擇日期</label>
+                    <select id="edit-date-select" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none"></select>
+                </div>
+
                 <div>
                     <label class="text-xs text-textSub block mb-1">標題</label>
-                    <input type="text" id="edit-title" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none" placeholder="例如：吃拉麵">
+                    <input type="text" id="edit-title" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none" placeholder="例如：環球影城">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-xs text-textSub block mb-1">開始時間 (HH:MM)</label>
+                        <label class="text-xs text-textSub block mb-1">時間 (HH:MM)</label>
                         <input type="time" id="edit-time" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none">
                     </div>
                     <div>
                         <label class="text-xs text-textSub block mb-1">類型</label>
                         <select id="edit-type" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none">
+                            <option value="play">玩樂/設施</option>
                             <option value="food">餐廳/吃</option>
                             <option value="shop">逛街</option>
-                            <option value="play">玩樂/設施</option>
                             <option value="train">交通</option>
                             <option value="hotel">飯店</option>
                             <option value="flight">飛機</option>
-                            <option value="camera">景點/拍照</option>
+                            <option value="camera">景點</option>
                         </select>
                     </div>
                 </div>
                 <div>
-                    <label class="text-xs text-textSub block mb-1">備註 / 描述</label>
-                    <textarea id="edit-desc" rows="3" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none" placeholder="輸入詳細資訊..."></textarea>
+                    <label class="text-xs text-textSub block mb-1">備註</label>
+                    <textarea id="edit-desc" rows="3" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white focus:border-accent outline-none" placeholder="輸入詳細資訊、導航連結或備註..."></textarea>
                 </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <input type="checkbox" id="edit-important" class="w-4 h-4 accent-accent">
-                    <label for="edit-important" class="text-sm text-white">設為重點行程 (星號)</label>
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="edit-important" class="w-4 h-4 accent-accent rounded">
+                    <label for="edit-important" class="text-sm text-slate-300">設為重點行程 (星號)</label>
                 </div>
             </div>
             
             <div class="flex gap-3 mt-6">
-                <button onclick="deleteEvent()" id="btn-delete" class="px-4 py-3 rounded-xl bg-red-500/20 text-red-400 border border-red-500/50 hidden"><i class="fa-solid fa-trash"></i></button>
+                <button onclick="deleteEvent()" id="btn-delete" class="px-4 py-3 rounded-xl bg-red-900/30 text-red-400 border border-red-800 hidden"><i class="fa-solid fa-trash"></i></button>
                 <button onclick="closeModal()" class="flex-1 py-3 rounded-xl bg-slate-700 text-textSub">取消</button>
                 <button onclick="saveEdit()" class="flex-1 py-3 rounded-xl bg-accent text-white font-bold shadow-lg shadow-rose-500/20">儲存</button>
             </div>
@@ -130,12 +123,12 @@
     </div>
 
     <div id="date-modal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-card w-full max-w-sm rounded-2xl p-6 border border-slate-700">
-            <h3 class="text-lg font-bold mb-4 text-white">新增日期</h3>
-            <input type="date" id="new-date-picker" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white mb-4">
-            <div class="flex gap-3">
-                <button onclick="document.getElementById('date-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg bg-slate-700 text-textSub">取消</button>
-                <button onclick="confirmAddDate()" class="flex-1 py-2 rounded-lg bg-accent text-white font-bold">新增</button>
+        <div class="bg-card w-full max-w-xs rounded-2xl p-6 border border-slate-700">
+            <h3 class="text-white font-bold mb-4">新增旅行日期</h3>
+            <input type="date" id="new-date-input" class="w-full bg-dark border border-slate-600 rounded-lg p-3 text-white mb-4">
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('date-modal').classList.add('hidden')" class="flex-1 bg-slate-700 text-white py-2 rounded">取消</button>
+                <button onclick="addNewDate()" class="flex-1 bg-accent text-white py-2 rounded">確定</button>
             </div>
         </div>
     </div>
@@ -143,22 +136,16 @@
     <nav class="glass-nav fixed bottom-0 w-full z-40 pb-[env(safe-area-inset-bottom)]">
         <div class="flex justify-around items-center h-16">
             <button onclick="switchTab('plan')" class="nav-btn active w-1/4 flex flex-col items-center gap-1 text-textSub" data-tab="plan">
-                <i class="fa-solid fa-list-ul text-xl"></i>
-                <span class="text-[10px] font-bold">行程</span>
-            </button>
-            <button onclick="switchTab('guide')" class="nav-btn w-1/4 flex flex-col items-center gap-1 text-textSub" data-tab="guide">
-                <i class="fa-solid fa-book-open text-xl"></i>
-                <span class="text-[10px] font-bold">導覽</span>
+                <i class="fa-solid fa-list-ul text-xl"></i><span class="text-[10px] font-bold">行程</span>
             </button>
             <button onclick="switchTab('info')" class="nav-btn w-1/4 flex flex-col items-center gap-1 text-textSub" data-tab="info">
-                <i class="fa-solid fa-circle-info text-xl"></i>
-                <span class="text-[10px] font-bold">資訊</span>
+                <i class="fa-solid fa-circle-info text-xl"></i><span class="text-[10px] font-bold">資訊</span>
             </button>
         </div>
     </nav>
 
     <script>
-        // --- 1. Firebase Configuration (請替換為你的設定) ---
+        // --- 你的 Firebase 設定 (已自動填入) ---
         const firebaseConfig = {
             apiKey: "AIzaSyCLbbSKx0TsCAWzJCOBjJltkQw7GJ0U9GM", 
             authDomain: "travel-tool-from-hioklu.firebaseapp.com",
@@ -168,346 +155,317 @@
             appId: "1:1038104064998:web:3e70348f56b4675e261c27"
         };
 
-
-        // Initialize Firebase
-        let db;
+        // 初始化 Firebase
         try {
             firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-        } catch (e) {
-            console.error("Firebase Init Error (Did you replace the config?):", e);
-            alert("請編輯 HTML 檔案填入 Firebase Config 才能運作！");
+            var db = firebase.firestore();
+            console.log("Firebase Connected");
+        } catch(e) {
+            console.error("Firebase Init Error:", e);
+            document.getElementById('loader-text').innerText = "連線失敗，請檢查網路";
+            document.getElementById('loader-text').classList.add('text-red-500');
         }
 
-        // --- Data & State ---
-        // 預設資料 (如果是第一次建立，會用到這個)
-        const initialData = {
-            days: {
-                "2026-01-24": [
-                    { id: 1700000001, time: "09:00", type: "flight", title: "出發", desc: "TPE -> KIX", isImportant: true },
-                    { id: 1700000002, time: "14:30", type: "hotel", title: "Check-in", desc: "APA Hotel" }
-                ]
-            }
-        };
+        // --- 全域變數 ---
+        let globalData = {}; 
+        let activeDate = ""; 
+        const docId = "my_trip_data_v1"; // 這就像是你的檔案名稱
 
-        let tripData = { days: {} };
-        let activeTab = 'plan';
-        let activeDate = '';
-        const docId = 'myOsakaTrip2026'; // 資料庫中的文件 ID
+        // --- 核心邏輯 ---
+        function initApp() {
+            const docRef = db.collection("trips").doc(docId);
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loader-text');
 
-        // --- Helpers ---
-        const getWeekday = (dateStr) => {
-            const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-            return days[new Date(dateStr).getDay()];
-        };
-
-        // --- Core Functions ---
-
-        function init() {
-            // 監聽 Firestore 資料變化 (Real-time Sync)
-            db.collection('trips').doc(docId).onSnapshot((doc) => {
-                const loader = document.getElementById('loader');
-                
+            // 監聽資料庫變化
+            docRef.onSnapshot((doc) => {
                 if (doc.exists) {
-                    tripData = doc.data();
-                    console.log("Data synced from cloud");
+                    console.log("資料同步成功！");
+                    globalData = doc.data();
+                    
+                    // 如果沒有選中日期，預設選第一天
+                    if (!activeDate) {
+                        const dates = Object.keys(globalData).sort();
+                        if(dates.length > 0) activeDate = dates[0];
+                    }
+                    
+                    renderPlan();
+                    loader.style.opacity = 0;
+                    setTimeout(() => loader.style.display = 'none', 500);
+
                 } else {
-                    // 如果雲端沒資料，就寫入預設資料
-                    console.log("No data found, creating default...");
-                    tripData = initialData;
-                    saveToCloud();
+                    // *** 關鍵：如果資料庫是空的，寫入範例資料 ***
+                    console.log("資料庫是空的，建立預設資料中...");
+                    loaderText.innerText = "正在建立初始資料庫...";
+                    
+                    const defaultData = {
+                        "2026-01-24": [
+                            { id: 1, time: "09:00", type: "flight", title: "抵達關西機場", desc: "TPE -> KIX", isImportant: true },
+                            { id: 2, time: "12:00", type: "train", title: "前往難波", desc: "南海電鐵 Rapi:t" },
+                            { id: 3, time: "18:00", type: "food", title: "道頓堀晚餐", desc: "吃大阪燒、章魚燒", isImportant: true }
+                        ]
+                    };
+                    
+                    // 寫入
+                    db.collection("trips").doc(docId).set(defaultData)
+                        .then(() => {
+                            console.log("預設資料建立完成！");
+                            // 寫入後會自動觸發上面的 onSnapshot，所以不用手動 reload
+                        })
+                        .catch((error) => {
+                            console.error("建立資料失敗: ", error);
+                            loaderText.innerHTML = `建立失敗<br>請檢查 Firebase Console 安全規則 (Rules)<br>是否設為 true`;
+                            loaderText.classList.add('text-red-500');
+                        });
                 }
-
-                // 設定預設日期 (如果是空的)
-                if (!activeDate && Object.keys(tripData.days).length > 0) {
-                    // 自動排序日期並選第一天
-                    const sortedDates = Object.keys(tripData.days).sort();
-                    activeDate = sortedDates[0];
-                }
-
-                renderApp();
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 300);
-                showSyncStatus();
             }, (error) => {
-                console.error("Sync Error:", error);
-                alert("連線錯誤，請檢查 Firebase Config 或網路");
+                console.error("監聽失敗:", error);
+                // 通常是權限不足 (Rules = false)
+                loaderText.innerHTML = `存取被拒絕<br>請至 Firebase Console -> Firestore -> Rules<br>將 allow read, write 改為 true`;
+                loaderText.classList.add('text-red-500');
             });
         }
 
-        function showSyncStatus() {
-            const el = document.getElementById('sync-status');
-            el.style.opacity = '1';
-            setTimeout(() => el.style.opacity = '0', 2000);
-        }
-
         function saveToCloud() {
-            // 寫入 Firestore
-            db.collection('trips').doc(docId).set(tripData)
-                .then(() => showSyncStatus())
-                .catch((e) => alert("儲存失敗: " + e.message));
+            const status = document.getElementById('save-status');
+            db.collection("trips").doc(docId).set(globalData)
+                .then(() => {
+                    status.style.opacity = 1;
+                    setTimeout(() => status.style.opacity = 0, 2000);
+                })
+                .catch((error) => alert("儲存失敗: " + error.message));
         }
 
-        function renderApp() {
-            renderHeaderInfo();
+        // --- 畫面渲染 ---
+        function renderPlan() {
             const container = document.getElementById('app');
             container.innerHTML = '';
+
+            const dates = Object.keys(globalData).sort();
+            const weekdayMap = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+
+            // Header Badge
+            const dayIndex = dates.indexOf(activeDate);
+            document.getElementById('header-day-badge').innerText = dayIndex >= 0 ? `DAY ${dayIndex + 1}` : "PLAN";
+
+            // Date Scroll
+            let html = `<div class="sticky top-[80px] z-30 bg-dark/95 backdrop-blur pb-3 pt-2 -mx-4 px-4 flex gap-2 overflow-x-auto no-scrollbar border-b border-white/5 mb-6">`;
             
-            const fab = document.getElementById('fab-add');
-            
-            if (activeTab === 'plan') {
-                renderPlan(container);
-                fab.classList.remove('hidden');
-            } else if (activeTab === 'guide') {
-                renderGuide(container);
-                fab.classList.add('hidden');
-            } else if (activeTab === 'info') {
-                renderInfo(container);
-                fab.classList.add('hidden');
+            dates.forEach(date => {
+                const d = new Date(date);
+                const isActive = date === activeDate;
+                const weekDay = weekdayMap[d.getDay()];
+                const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+                
+                html += `
+                    <button onclick="switchDate('${date}')" class="flex-shrink-0 px-4 py-2 rounded-full border transition-all text-sm font-bold tracking-wide ${isActive ? 'bg-white text-dark border-white shadow-lg' : 'bg-transparent border-slate-600 text-slate-400'}">
+                        ${dateStr} ${weekDay}
+                    </button>`;
+            });
+
+            // Add Date Button
+            html += `
+                <button onclick="document.getElementById('date-modal').classList.remove('hidden')" class="flex-shrink-0 px-3 py-2 rounded-full border border-dashed border-slate-600 text-slate-500 hover:text-accent">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>`;
+
+            // Events List
+            const events = globalData[activeDate] || [];
+            events.sort((a, b) => (a.time || "00:00").localeCompare(b.time || "00:00"));
+
+            html += `<div class="pb-24">`;
+            if (events.length === 0) {
+                html += `<div class="text-center text-slate-500 mt-10 flex flex-col items-center gap-2">
+                    <i class="fa-regular fa-calendar-xmark text-3xl opacity-50"></i>
+                    <p>點擊右下角 + 新增行程</p>
+                </div>`;
             }
+
+            events.forEach((item, index) => {
+                const isLast = index === events.length - 1;
+                const icon = getIcon(item.type);
+                
+                html += `
+                    <div class="flex gap-4 mb-2 group ${isLast ? 'last-item' : ''}" onclick="openEditModal('${item.id}')">
+                        <div class="flex flex-col items-center w-14 flex-shrink-0 relative">
+                            <div class="text-xs font-mono font-bold text-textSub mb-2">${item.time}</div>
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg ${item.isImportant ? 'bg-accent text-white' : 'bg-cardLight text-textSub border border-slate-600'}">
+                                <i class="${icon} text-sm"></i>
+                            </div>
+                            <div class="timeline-line"></div>
+                        </div>
+
+                        <div class="flex-1 min-w-0 pb-6 cursor-pointer">
+                            <div class="trip-card ${item.isImportant ? 'important' : 'normal'} p-4 h-full flex flex-col justify-between hover:bg-slate-800 transition-colors">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-bold text-lg leading-tight text-white pr-2">${item.title}</h3>
+                                    ${item.isImportant ? '<i class="fa-solid fa-star text-accent text-xs"></i>' : ''}
+                                </div>
+                                <p class="text-sm text-slate-300 whitespace-pre-line leading-relaxed">${item.desc || ''}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            container.innerHTML = html;
+        }
+
+        // --- 互動功能 ---
+        function switchDate(date) {
+            activeDate = date;
+            renderPlan();
         }
 
         function switchTab(tab) {
-            activeTab = tab;
-            document.querySelectorAll('.nav-btn').forEach(btn => {
+             // 簡易切換示範，目前主要功能在 plan
+             document.querySelectorAll('.nav-btn').forEach(btn => {
                 const isActive = btn.dataset.tab === tab;
                 btn.classList.toggle('active', isActive);
                 btn.classList.toggle('text-accent', isActive);
                 btn.classList.toggle('text-textSub', !isActive);
             });
-            window.scrollTo(0, 0);
-            renderApp();
-        }
-
-        function renderHeaderInfo() {
-            // 計算今天是第幾天
-            const dates = Object.keys(tripData.days || {}).sort();
-            const idx = dates.indexOf(activeDate);
-            const badge = document.getElementById('header-day-badge');
-            badge.innerText = idx >= 0 ? `DAY ${idx + 1}` : "PLAN";
-        }
-
-        // --- Render Views ---
-
-        function renderPlan(container) {
-            const dates = Object.keys(tripData.days || {}).sort();
             
-            // 1. Date Pills
-            let html = `<div class="sticky top-[80px] z-30 bg-dark/95 backdrop-blur pb-3 pt-2 -mx-4 px-4 flex gap-2 overflow-x-auto no-scrollbar border-b border-white/5 mb-6">`;
-            
-            dates.forEach(date => {
-                const isActive = date === activeDate;
-                const d = new Date(date);
-                const displayDate = `${d.getMonth()+1}/${d.getDate()}`;
-                
-                html += `
-                    <button onclick="changeDate('${date}')" class="flex-shrink-0 px-4 py-2 rounded-full border transition-all text-sm font-bold tracking-wide ${isActive ? 'bg-white text-dark border-white shadow-lg' : 'bg-transparent border-slate-600 text-slate-400 hover:border-slate-400'}">
-                        ${displayDate} ${getWeekday(date)}
-                    </button>`;
-            });
-            
-            // Add Date Button
-            html += `
-                <button onclick="openDateModal()" class="flex-shrink-0 px-3 py-2 rounded-full border border-dashed border-slate-600 text-slate-500 hover:text-accent hover:border-accent transition-colors">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-            </div>`;
-
-            // 2. Timeline
-            const events = (tripData.days[activeDate] || []).sort((a,b) => a.time.localeCompare(b.time));
-            html += `<div class="pb-24 animate-[fadeIn_0.3s_ease-out]">`;
-            
-            if(events.length === 0) {
-                html += `<div class="text-center text-slate-500 mt-20 flex flex-col items-center gap-2">
-                    <i class="fa-regular fa-calendar-xmark text-3xl opacity-50"></i>
-                    <p>本日尚無行程</p>
-                    <p class="text-xs">點擊右下角 + 新增</p>
+            if(tab === 'info') {
+                document.getElementById('app').innerHTML = `
+                <div class="p-6 text-center text-slate-400 bg-card rounded-xl border border-slate-700 mt-4">
+                    <h2 class="text-xl text-white font-bold mb-2">專案資訊</h2>
+                    <p class="text-xs break-all">DocID: ${docId}</p>
+                    <p class="text-xs mt-2 text-green-400">Firebase 連線正常</p>
                 </div>`;
             } else {
-                events.forEach((item, index) => {
-                    const isLast = index === events.length - 1;
-                    const isImportant = item.isImportant;
-                    const icon = getIcon(item.type);
-                    
-                    html += `
-                        <div class="flex gap-4 mb-2 group ${isLast ? 'last-item' : ''}">
-                            <div class="flex flex-col items-center w-14 flex-shrink-0 relative">
-                                <div class="text-xs font-mono font-bold text-textSub mb-2">${item.time}</div>
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg ${isImportant ? 'bg-accent text-white' : 'bg-cardLight text-textSub border border-slate-600'}">
-                                    <i class="${icon} text-sm"></i>
-                                </div>
-                                <div class="timeline-line"></div>
-                            </div>
-
-                            <div class="flex-1 min-w-0 pb-6 cursor-pointer" onclick="openEditModal('${activeDate}', ${item.id})">
-                                <div class="trip-card ${isImportant ? 'important' : 'normal'} p-4 h-full flex flex-col justify-between">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h3 class="font-bold text-lg leading-tight text-white pr-2">${item.title}</h3>
-                                        ${isImportant ? '<i class="fa-solid fa-star text-accent text-xs"></i>' : ''}
-                                    </div>
-                                    <p class="text-sm text-slate-300 whitespace-pre-line leading-relaxed">${item.desc || ''}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
+                renderPlan();
             }
-            html += `</div>`;
-            container.innerHTML = html;
         }
 
-        function renderGuide(container) {
-            // 這裡可以做成同樣讀取 DB 的資料，目前先用靜態示範
-            container.innerHTML = `
-                <div class="p-4 text-center text-slate-400 mt-10">
-                    <i class="fa-solid fa-person-digging text-4xl mb-4"></i>
-                    <p>導覽頁面範例</p>
-                    <p class="text-xs mt-2">你可以將航班資訊也放入資料庫使其可編輯</p>
-                </div>
-            `;
-        }
-
-        function renderInfo(container) {
-             container.innerHTML = `
-                <div class="p-4 space-y-4">
-                     <div class="bg-card rounded-xl p-6 text-center border border-slate-700">
-                        <h2 class="text-xl font-bold text-white mb-1">編輯說明</h2>
-                        <p class="text-sm text-slate-400 mb-4">所有更動都會即時同步到雲端</p>
-                        <div class="text-xs text-slate-500">API Key 模式</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- User Actions ---
-
-        function changeDate(date) {
-            activeDate = date;
-            renderApp();
-        }
-
-        function getIcon(type) {
-            const map = {
-                transport: 'fa-solid fa-suitcase-rolling', flight: 'fa-solid fa-plane-up',
-                train: 'fa-solid fa-train-subway', hotel: 'fa-solid fa-bed',
-                food: 'fa-solid fa-utensils', shop: 'fa-solid fa-bag-shopping',
-                play: 'fa-solid fa-gamepad', camera: 'fa-solid fa-camera'
-            };
-            return map[type] || 'fa-solid fa-circle';
-        }
-
-        // Date Modal
-        function openDateModal() {
-            document.getElementById('date-modal').classList.remove('hidden');
-        }
-        
-        function confirmAddDate() {
-            const newDate = document.getElementById('new-date-picker').value;
-            if(!newDate) return alert("請選擇日期");
+        function addNewDate() {
+            const newDate = document.getElementById('new-date-input').value;
+            if(!newDate) return;
             
-            if(!tripData.days[newDate]) {
-                tripData.days[newDate] = [];
-                activeDate = newDate; // Switch to new date
+            if(!globalData[newDate]) {
+                globalData[newDate] = [];
+                activeDate = newDate;
                 saveToCloud();
             } else {
-                alert("日期已存在");
+                alert("該日期已存在");
                 activeDate = newDate;
             }
             document.getElementById('date-modal').classList.add('hidden');
-            renderApp();
         }
 
-        // Edit/Add Logic
-        function openEditModal(date, id) {
-            if(!date) return alert("請先建立或選擇一個日期");
-
+        function openEditModal(id) {
             const modal = document.getElementById('edit-modal');
-            const btnDelete = document.getElementById('btn-delete');
             const titleEl = document.getElementById('modal-title');
-            
-            document.getElementById('edit-date-input').value = date;
+            const dateSelectGroup = document.getElementById('date-select-group');
+            const dateSelect = document.getElementById('edit-date-select');
+            const btnDelete = document.getElementById('btn-delete');
+
+            // Reset Form
+            document.getElementById('edit-id').value = "";
+            document.getElementById('edit-title').value = "";
+            document.getElementById('edit-time').value = "10:00";
+            document.getElementById('edit-type').value = "food";
+            document.getElementById('edit-desc').value = "";
+            document.getElementById('edit-important').checked = false;
 
             if (id) {
-                // Edit Mode
-                const list = tripData.days[date];
-                const item = list.find(i => i.id === id);
-                if (!item) return;
+                // Edit
+                const list = globalData[activeDate];
+                const item = list.find(i => i.id == id);
+                if(!item) return;
 
-                document.getElementById('edit-id').value = id;
+                document.getElementById('edit-id').value = item.id;
                 document.getElementById('edit-title').value = item.title;
                 document.getElementById('edit-time').value = item.time;
-                document.getElementById('edit-type').value = item.type || 'play';
-                document.getElementById('edit-desc').value = item.desc || '';
-                document.getElementById('edit-important').checked = item.isImportant || false;
+                document.getElementById('edit-type').value = item.type;
+                document.getElementById('edit-desc').value = item.desc;
+                document.getElementById('edit-important').checked = item.isImportant;
                 
                 titleEl.innerText = "編輯行程";
+                dateSelectGroup.classList.add('hidden');
                 btnDelete.classList.remove('hidden');
             } else {
-                // Add Mode
-                document.getElementById('edit-id').value = '';
-                document.getElementById('edit-title').value = '';
-                document.getElementById('edit-time').value = '10:00';
-                document.getElementById('edit-type').value = 'food';
-                document.getElementById('edit-desc').value = '';
-                document.getElementById('edit-important').checked = false;
-                
+                // Add
                 titleEl.innerText = "新增行程";
+                dateSelect.innerHTML = "";
+                // 填充日期選項
+                const dates = Object.keys(globalData).sort();
+                if(dates.length === 0) return alert("請先新增日期");
+
+                dates.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.text = d;
+                    if(d === activeDate) opt.selected = true;
+                    dateSelect.appendChild(opt);
+                });
+                
+                dateSelectGroup.classList.remove('hidden');
                 btnDelete.classList.add('hidden');
             }
-            
+
             modal.classList.remove('hidden');
         }
 
-        function closeModal() {
-            document.getElementById('edit-modal').classList.add('hidden');
-        }
-
         function saveEdit() {
-            const date = document.getElementById('edit-date-input').value;
-            const idInput = document.getElementById('edit-id').value;
+            const id = document.getElementById('edit-id').value;
+            const title = document.getElementById('edit-title').value;
             
+            if(!title) return alert("請輸入標題");
+
             const newData = {
-                id: idInput ? parseInt(idInput) : Date.now(), // Create ID if new
-                title: document.getElementById('edit-title').value,
+                id: id ? id : Date.now().toString(),
+                title: title,
                 time: document.getElementById('edit-time').value,
                 type: document.getElementById('edit-type').value,
                 desc: document.getElementById('edit-desc').value,
                 isImportant: document.getElementById('edit-important').checked
             };
 
-            if(!newData.title) return alert("請輸入標題");
-
-            let list = tripData.days[date] || [];
-
-            if (idInput) {
-                // Update
-                const idx = list.findIndex(i => i.id == idInput);
-                if(idx > -1) list[idx] = { ...list[idx], ...newData };
+            if (id) {
+                // Update existing
+                const list = globalData[activeDate];
+                const idx = list.findIndex(i => i.id == id);
+                if(idx > -1) list[idx] = newData;
             } else {
-                // Create
-                list.push(newData);
+                // Create new
+                const targetDate = document.getElementById('edit-date-select').value;
+                if(!globalData[targetDate]) globalData[targetDate] = [];
+                globalData[targetDate].push(newData);
+                activeDate = targetDate;
             }
-            
-            tripData.days[date] = list;
+
             saveToCloud();
             closeModal();
         }
 
         function deleteEvent() {
-            const id = parseInt(document.getElementById('edit-id').value);
-            const date = document.getElementById('edit-date-input').value;
-            
-            if(confirm("確定要刪除此行程嗎？")) {
-                let list = tripData.days[date];
-                tripData.days[date] = list.filter(i => i.id !== id);
+            const id = document.getElementById('edit-id').value;
+            if(confirm("確定刪除此行程？")) {
+                const list = globalData[activeDate];
+                globalData[activeDate] = list.filter(i => i.id != id);
                 saveToCloud();
                 closeModal();
             }
         }
 
-        // Start
-        document.addEventListener('DOMContentLoaded', init);
+        function closeModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
 
+        function getIcon(type) {
+            const map = {
+                food: 'fa-solid fa-utensils', shop: 'fa-solid fa-bag-shopping',
+                play: 'fa-solid fa-gamepad', train: 'fa-solid fa-train-subway',
+                hotel: 'fa-solid fa-bed', flight: 'fa-solid fa-plane-up',
+                camera: 'fa-solid fa-camera'
+            };
+            return map[type] || 'fa-solid fa-circle';
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
